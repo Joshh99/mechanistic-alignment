@@ -19,8 +19,8 @@ class Transformer(nn.Module):
         """Ensures editable configurations"""
         super().__init__()
         
-        self.token_emb = nn.Linear(cfg['emb_dim'])
-        self.pos_emb = nn.Linear(cfg['emb_dim'])
+        self.token_emb = nn.Embedding(cfg["vocab_size"], cfg["emb_dim"])
+        self.pos_emb = nn.Embedding(cfg["context_length"], cfg["emb_dim"])
         self.dropout_emb = nn.Dropout(cfg["drop_rate"])
 
         self.trf_blocks = nn.Sequential(
@@ -28,9 +28,9 @@ class Transformer(nn.Module):
         )
 
         self.final_norm = LayerNorm(cfg["emb_dim"])
-        self.out_head = nn.Linear(
-            cfg["emb_dim"], cfg["vocab_size"], bias=False
-        ) # without weight tying
+        # self.out_head = nn.Linear(
+        #     cfg["emb_dim"], cfg["vocab_size"], bias=False
+        # ) # without weight tying
 
     def forward(self, in_idx):
         # Input processing
@@ -47,7 +47,11 @@ class Transformer(nn.Module):
 
         # Output processing
         x = self.final_norm(x)
-        logits = self.out_head(x)
+
+        # logits = self.out_head(x) Without weight tying
+
+        # Use transposed token embedding as output projection
+        logits = torch.matmul(x, self.token_emb.weight.T)  # Weight tying!
 
         return logits
 
