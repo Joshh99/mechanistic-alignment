@@ -101,7 +101,7 @@ class MultiHeadAttention(nn.Module):
         self.head_dim = d_out // num_heads
         self.d_in = d_in
         self.d_out = d_out
-        self.dropout = dropout
+        self.dropout = nn.Dropout(dropout)
 
         # Precompute the causal mask and store it as a model state (moves with the model to the GPU/CPU)
         self.register_buffer(
@@ -154,7 +154,7 @@ class MultiHeadAttention(nn.Module):
         attn_scores.masked_fill_(mask_bool, -torch.inf)
 
         # Compute attn weights
-        attn_weights = torch.softmax(attn_scores / keys.shape[-1]**0.5, dim=-1)
+        attn_weights = torch.softmax(attn_scores / keys.shape[-1]**0.5, dim=-1) # keys.shape[-1]=head_dim, √head_dim
 
         # Apply dropout to attention weights for regularization
         attn_weights = self.dropout(attn_weights)
@@ -175,14 +175,16 @@ class FeedForward(nn.Module):
     def __init__(self, cfg):
         super().__init__()
 
-        self.dropout = nn.Dropout(cfg["drop_rate"])
+        self.dropout_prior = nn.Dropout(cfg["drop_rate"])
+        self.dropout_post = nn.Dropout(cfg["drop_rate"])
+
 
         self.layers = nn.Sequential(
             nn.Linear(cfg['emb_dim'], 4 * cfg['emb_dim']),
-            self.dropout,
+            self.dropout_prior,
             GELU(),
             nn.Linear(4 * cfg['emb_dim'], cfg['emb_dim']),
-            self.dropout
+            self.dropout_post
         )
 
     def forward(self, x):
