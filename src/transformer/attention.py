@@ -58,7 +58,7 @@ class Transformer(nn.Module):
 
 class TransformerBlock(nn.Module):
     """Transformer Block"""
-    def __init__(self, cfg, num_heads):
+    def __init__(self, cfg):
         super().__init__()
         
         self.dropout_shortcut = nn.Dropout(cfg['drop_rate'])
@@ -135,9 +135,9 @@ class MultiHeadAttention(nn.Module):
         values = self.W_value(x)
 
         # Split the embedding vector into the num of heads
-        queries.view(b, num_tokens, self.num_heads, self.head_dim)
-        keys.view(b, num_tokens, self.num_heads, self.head_dim)
-        values.view(b, num_tokens, self.num_heads, self.head_dim)
+        queries = queries.view(b, num_tokens, self.num_heads, self.head_dim)
+        keys = keys.view(b, num_tokens, self.num_heads, self.head_dim)
+        values = values.view(b, num_tokens, self.num_heads, self.head_dim)
 
         # Transpose for parallel head processing
         queries = queries.transpose(1, 2)
@@ -175,10 +175,14 @@ class FeedForward(nn.Module):
     def __init__(self, cfg):
         super().__init__()
 
+        self.dropout = nn.Dropout(cfg["drop_rate"])
+
         self.layers = nn.Sequential(
             nn.Linear(cfg['emb_dim'], 4 * cfg['emb_dim']),
+            self.dropout,
             GELU(),
-            nn.Linear(4 * cfg['emb_dim'], cfg['emb_dim'])
+            nn.Linear(4 * cfg['emb_dim'], cfg['emb_dim']),
+            self.dropout
         )
 
     def forward(self, x):
