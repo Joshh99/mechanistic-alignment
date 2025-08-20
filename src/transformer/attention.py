@@ -192,8 +192,8 @@ class MultiHeadAttention(nn.Module):
         # Slice the pre-computed mask to match current sequence length
         mask_bool = self.mask.bool()[:num_tokens, :num_tokens] # [[False, True, True, etc]]
 
-        # Set future positions to negative infinity
-        attn_scores.masked_fill_(mask_bool, -torch.inf)
+        # Set future positions to a large negative value
+        attn_scores.masked_fill_(mask_bool, -1e9)
 
         # Compute attn weights
         attn_weights = torch.softmax(attn_scores / keys.shape[-1]**0.5, dim=-1) # keys.shape[-1]=head_dim, √head_dim
