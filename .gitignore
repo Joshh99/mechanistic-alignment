@@ -1,1 +1,27 @@
-.venv
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ML/Data
+*.pkl
+*.pt
+*.pth
+data/
+models/
+checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
